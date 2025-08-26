@@ -16,50 +16,51 @@ import {
   Settings,
   Music,
   Video,
-  BookOpen,
+  Bell,
   Mic,
 } from 'lucide-react-native';
 import { useAuth } from '../../../../contexts/AuthContext';
 import { LanguageSwitcher } from '../../../../components/LanguageSwitcher';
+import { TopNavigation } from '../../../../components/TopNavigation';
 
 export default function AdminDashboardScreen() {
   const { user } = useAuth();
 
   const adminActions = [
     {
-      id: 'upload-hymn',
-      title: 'Add Hymn',
-      description: 'Upload new hymns with translations',
-      icon: <BookOpen size={32} color="#1E3A8A" />,
-      onPress: () => router.push('/admin/upload?type=hymn'),
+      id: 'upload-notice',
+      title: 'Send Notice',
+      description: 'Send Notification to all users',
+      icon: <Bell size={32} color="#1E3A8A" />,
+      onPress: () => router.push('/(tabs)/profile/admin/upload/notice'),
     },
     {
       id: 'upload-sermon',
       title: 'Add Sermon',
       description: 'Upload new sermons with audio',
       icon: <Mic size={32} color="#1E3A8A" />,
-      onPress: () => router.push('/admin/upload?type=sermon'),
+      onPress: () => router.push('/(tabs)/profile/admin/upload/sermon'),
     },
     {
       id: 'upload-song',
       title: 'Upload Song',
       description: 'Add gospel music to the library',
       icon: <Music size={32} color="#1E3A8A" />,
-      onPress: () => router.push('/admin/upload?type=song'),
+      onPress: () => router.push('/(tabs)/profile/admin/upload/song'),
     },
     {
       id: 'upload-video',
       title: 'Upload Video',
       description: 'Add animated Bible stories',
       icon: <Video size={32} color="#1E3A8A" />,
-      onPress: () => router.push('/admin/upload?type=video'),
+      onPress: () => router.push('/(tabs)/profile/admin/upload/video'),
     },
     {
       id: 'view-messages',
       title: 'View Messages',
       description: 'Check contact form submissions',
       icon: <MessageCircle size={32} color="#059669" />,
-      onPress: () => router.push('/admin/messages'),
+      onPress: () => router.push('/(tabs)/profile/admin/messages'),
     },
     {
       id: 'analytics',
@@ -72,17 +73,7 @@ export default function AdminDashboardScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => router.back()}
-        >
-          <ArrowLeft size={24} color="#1F2937" />
-        </TouchableOpacity>
-        <Text style={styles.title}>Admin Dashboard</Text>
-        <LanguageSwitcher />
-      </View>
-
+      <TopNavigation />
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.welcomeCard}>
           <Text style={styles.welcomeTitle}>Welcome, Administrator</Text>

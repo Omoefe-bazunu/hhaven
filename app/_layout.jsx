@@ -6,10 +6,12 @@ import { LanguageProvider } from '../contexts/LanguageContext';
 import { AuthProvider } from '../contexts/AuthContext';
 import { ThemeProvider } from '../contexts/ThemeContext';
 import { SafeAreaWrapper } from '../components/ui/SafeAreaWrapper';
+import { Audio } from 'expo-av'; // Import Audio from expo-av
 
 export default function RootLayout() {
   useFrameworkReady();
 
+  // Function to set onboarding seen
   const setOnboardingSeen = async () => {
     try {
       const AsyncStorage = (
@@ -21,8 +23,26 @@ export default function RootLayout() {
     }
   };
 
+  // Set audio mode and onboarding status on app load
   useEffect(() => {
     setOnboardingSeen();
+
+    const setAudioMode = async () => {
+      try {
+        await Audio.setAudioModeAsync({
+          allowsRecordingIOS: false,
+          playsInSilentModeIOS: true,
+          staysActiveInBackground: true,
+          interruptionModeIOS: Audio.INTERRUPTION_MODE_IOS_DUCK_OTHERS,
+          shouldDuckAndroid: true,
+          interruptionModeAndroid: Audio.INTERRUPTION_MODE_ANDROID_DUCK_OTHERS,
+        });
+      } catch (e) {
+        console.error('Failed to set audio mode', e);
+      }
+    };
+
+    setAudioMode();
   }, []);
 
   return (
@@ -35,8 +55,9 @@ export default function RootLayout() {
               <Stack.Screen name="(onboarding)" />
               <Stack.Screen name="(auth)" />
               <Stack.Screen name="(tabs)" />
-              <Stack.Screen name="contact" />
-              <Stack.Screen name="about" />
+              {/* <Stack.Screen name="contact" />
+              <Stack.Screen name="notices" />
+              <Stack.Screen name="about" /> */}
               <Stack.Screen name="+not-found" />
             </Stack>
             <StatusBar style="auto" />

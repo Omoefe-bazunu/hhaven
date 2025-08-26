@@ -23,18 +23,29 @@ export default function LoginScreen() {
 
   const handleLogin = async () => {
     if (!email || !password) {
-      Alert.alert('Error', 'Please fill in all fields');
+      Alert.alert(
+        'Error',
+        translations.fillAllFields || 'Please fill in all fields'
+      );
       return;
     }
 
     setIsLoading(true);
-    const success = await login(email, password);
-    setIsLoading(false);
-
-    if (success) {
-      router.replace('/(tabs)/home');
-    } else {
-      Alert.alert('Error', 'Invalid credentials');
+    try {
+      const success = await login(email.trim(), password);
+      if (success) {
+        router.replace('/(tabs)/home');
+      } else {
+        Alert.alert(
+          'Error',
+          translations.invalidCredentials || 'Invalid credentials'
+        );
+      }
+    } catch (error) {
+      console.error('Login failed:', error);
+      Alert.alert('Login Error', error.message || 'Something went wrong');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -59,7 +70,7 @@ export default function LoginScreen() {
             onChangeText={setEmail}
             keyboardType="email-address"
             autoCapitalize="none"
-            placeholder="Enter your email"
+            placeholder={translations.enterEmail || 'Enter your email'}
           />
 
           <Input
@@ -67,7 +78,7 @@ export default function LoginScreen() {
             value={password}
             onChangeText={setPassword}
             secureTextEntry
-            placeholder="Enter your password"
+            placeholder={translations.enterPassword || 'Enter your password'}
           />
 
           <Button
@@ -82,6 +93,7 @@ export default function LoginScreen() {
         <TouchableOpacity
           style={styles.signupLink}
           onPress={() => router.push('/(auth)/signup')}
+          disabled={isLoading}
         >
           <Text style={styles.signupText}>
             {translations.dontHaveAccount}{' '}

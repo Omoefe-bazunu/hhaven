@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -15,6 +15,7 @@ import {
   Info,
   Settings,
   LogOut,
+  Bell,
 } from 'lucide-react-native';
 import { useAuth } from '../../../contexts/AuthContext';
 import { useLanguage } from '../../../contexts/LanguageContext';
@@ -23,13 +24,32 @@ import { SafeAreaWrapper } from '../../../components/ui/SafeAreaWrapper';
 import { TopNavigation } from '../../../components/TopNavigation';
 import { Button } from '../../../components/ui/Button';
 import { LANGUAGES } from '../../../constants/languages';
+import { db } from '../../../services/firebaseConfig';
+import { doc, getDoc } from 'firebase/firestore';
 
 export default function ProfileScreen() {
   const { user, logout } = useAuth();
   const { translations, currentLanguage } = useLanguage();
   const { colors } = useTheme();
+  const [isAdmin, setIsAdmin] = useState(false);
 
   const currentLang = LANGUAGES.find((lang) => lang.code === currentLanguage);
+
+  useEffect(() => {
+    const checkAdminStatus = async () => {
+      if (user && user.email) {
+        try {
+          const docRef = doc(db, 'admins', user.email);
+          const docSnap = await getDoc(docRef);
+          setIsAdmin(docSnap.exists());
+        } catch (error) {
+          console.error('Error checking admin status:', error);
+          setIsAdmin(false);
+        }
+      }
+    };
+    checkAdminStatus();
+  }, [user]);
 
   const handleLogout = async () => {
     await logout();
@@ -38,21 +58,30 @@ export default function ProfileScreen() {
 
   const menuItems = [
     {
-      icon: <Music size={20} color={colors.primary} />,
-      title: translations.admin,
-      onPress: () => router.push('/profile/admin'),
+      icon: <Bell size={20} color={colors.primary} />,
+      title: translations.notices,
+      onPress: () => router.push('/profile/notices'),
     },
     {
       icon: <MessageCircle size={20} color={colors.primary} />,
       title: translations.contact,
-      onPress: () => router.push('/contact'),
+      onPress: () => router.push('/profile/contact'),
     },
     {
       icon: <Info size={20} color={colors.primary} />,
       title: translations.about,
-      onPress: () => router.push('/about'),
+      onPress: () => router.push('/profile/about'),
     },
   ];
+
+  // Conditionally add the admin link if the user is an admin
+  if (isAdmin) {
+    menuItems.unshift({
+      icon: <Music size={20} color={colors.primary} />,
+      title: translations.admin,
+      onPress: () => router.push('/profile/admin'),
+    });
+  }
 
   return (
     <SafeAreaWrapper>

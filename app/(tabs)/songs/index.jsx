@@ -5,6 +5,8 @@ import {
   FlatList,
   TouchableOpacity,
   StyleSheet,
+  TextInput,
+  ScrollView,
 } from 'react-native';
 import { router } from 'expo-router';
 import { Search, Play, Clock } from 'lucide-react-native';
@@ -12,9 +14,27 @@ import { useLanguage } from '../../../contexts/LanguageContext';
 import { useTheme } from '../../../contexts/ThemeContext';
 import { SafeAreaWrapper } from '../../../components/ui/SafeAreaWrapper';
 import { TopNavigation } from '../../../components/TopNavigation';
-import { Input } from '../../../components/ui/Input';
 import { mockSongs, mockHymns } from '../../../data/mockData';
 import { AudioPlayer } from '../../../components/AudioPlayer';
+import { Book, Music } from 'lucide-react-native';
+
+const CATEGORIES = [
+  {
+    id: 'native',
+    label: 'Instrumental Native',
+    description: 'Traditional tunes with instruments',
+  },
+  {
+    id: 'acappella',
+    label: 'A Cappella',
+    description: 'Pure vocal harmony without instruments',
+  },
+  {
+    id: 'english',
+    label: 'Instrumental English',
+    description: 'English songs with instrumental backing',
+  },
+];
 
 // Defines the Songs screen with Hymns and Music tabs
 export default function SongsScreen() {
@@ -48,159 +68,130 @@ export default function SongsScreen() {
     );
   });
 
-  // Render hymn card
-  const renderHymnItem = ({ item }) => {
-    const content =
-      (item.translations && item.translations[currentLanguage]) ||
-      item.translations?.en ||
-      {};
-    return (
-      <TouchableOpacity
-        style={[styles.card, { backgroundColor: colors.card }]}
-        onPress={() => router.push(`/(tabs)/songs/hymns/${item.id}`)}
-      >
-        <Text style={[styles.cardTitle, { color: colors.text }]}>
-          {content.title || 'Untitled'}
-        </Text>
-        <Text
-          style={[styles.cardContent, { color: colors.textSecondary }]}
-          numberOfLines={3}
-        >
-          {content.content || 'No content available'}
-        </Text>
-        <AudioPlayer
-          url={content.audioUrl}
-          title={content.title || 'Untitled'}
-        />
-      </TouchableOpacity>
-    );
-  };
-
-  // Render non-hymn song card
-  const renderSongItem = ({ item }) => (
-    <TouchableOpacity
-      style={[styles.card, { backgroundColor: colors.card }]}
-      onPress={() => router.push(`/(tabs)/songs/music/${item.id}`)}
-    >
-      <View style={styles.songInfo}>
-        <Text style={[styles.cardTitle, { color: colors.text }]}>
-          {item.title || 'Untitled'}
-        </Text>
-        <Text style={[styles.cardContent, { color: colors.textSecondary }]}>
-          {item.style || 'Unknown style'}
-        </Text>
-        <View style={styles.songMeta}>
-          <Clock size={14} color={colors.textSecondary} />
-          <Text style={[styles.metaText, { color: colors.textSecondary }]}>
-            {item.duration || 'Unknown'}
-          </Text>
-          <Text style={[styles.metaText, { color: colors.textSecondary }]}>
-            •
-          </Text>
-          <Text style={[styles.metaText, { color: colors.textSecondary }]}>
-            {item.category || 'Unknown'}
-          </Text>
-        </View>
-      </View>
-      <TouchableOpacity
-        style={[styles.playButton, { backgroundColor: colors.primaryLight }]}
-      >
-        <Play size={20} color={colors.primary} />
-      </TouchableOpacity>
-    </TouchableOpacity>
-  );
-
   return (
     <SafeAreaWrapper>
       <TopNavigation title={translations.songs || 'Songs'} />
-      <View
-        style={[styles.searchContainer, { backgroundColor: colors.surface }]}
+      <ScrollView
+        contentContainerStyle={{ paddingBottom: 30, paddingTop: 20 }}
+        showsVerticalScrollIndicator={false}
       >
-        <Search
-          size={20}
-          color={colors.textSecondary}
-          style={styles.searchIcon}
-        />
-        <Input
-          placeholder={`${translations.search || 'Search'} ${(
-            translations.songs || 'Songs'
-          ).toLowerCase()}...`}
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-          style={styles.searchInput}
-        />
-      </View>
+        {/* Tabs for Hymns and Music */}
+        <View style={styles.tabsContainer}>
+          <TouchableOpacity
+            style={[styles.tab, { backgroundColor: colors.card }]}
+            onPress={() => router.push('/(tabs)/songs/hymns')}
+          >
+            <Text style={[styles.tabText, { color: colors.text }]}>
+              {translations.hymns || 'Hymns'}
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.tab, { backgroundColor: colors.card }]}
+            onPress={() => router.push('/(tabs)/songs/music')}
+          >
+            <Text style={[styles.tabText, { color: colors.text }]}>
+              {translations.music || 'Music'}
+            </Text>
+          </TouchableOpacity>
+        </View>
 
-      {/* Tabs for Hymns and Music */}
-      <View style={styles.tabsContainer}>
-        <TouchableOpacity
-          style={[styles.tab, { backgroundColor: colors.card }]}
-          onPress={() => router.push('/(tabs)/songs/hymns')}
-        >
-          <Text style={[styles.tabText, { color: colors.text }]}>
+        {/* Hymns Section */}
+        <View style={styles.section}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>
             {translations.hymns || 'Hymns'}
           </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.tab, { backgroundColor: colors.card }]}
-          onPress={() => router.push('/(tabs)/songs/music')}
-        >
-          <Text style={[styles.tabText, { color: colors.text }]}>
+
+          <View
+            style={{ flexDirection: 'row', justifyContent: 'space-between' }}
+          >
+            {/* Theocratic Songs of Praise */}
+            <TouchableOpacity
+              style={[
+                styles.card,
+                { backgroundColor: colors.card, width: '48%' },
+              ]}
+              onPress={() => router.push('/songs/hymns')}
+            >
+              <Text
+                style={[
+                  styles.cardTitle,
+                  { color: colors.text, marginBottom: 4 },
+                ]}
+              >
+                Theocratic Songs of Praise (TSPs)
+              </Text>
+              <Text style={[styles.metaText, { color: colors.primary }]}>
+                Explore
+              </Text>
+            </TouchableOpacity>
+
+            {/* Psalms */}
+            <TouchableOpacity
+              style={[
+                styles.card,
+                { backgroundColor: colors.card, width: '48%' },
+              ]}
+              onPress={() => router.push('/songs/hymns')}
+            >
+              <Text
+                style={[
+                  styles.cardTitle,
+                  { color: colors.text, marginBottom: 4 },
+                ]}
+              >
+                Psalms
+              </Text>
+              <Text style={[styles.metaText, { color: colors.primary }]}>
+                Explore
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* Music section */}
+        <View style={styles.section}>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>
             {translations.music || 'Music'}
           </Text>
-        </TouchableOpacity>
-      </View>
 
-      {/* Hymns section */}
-      <View style={styles.section}>
-        <Text style={[styles.sectionTitle, { color: colors.text }]}>
-          {translations.hymns || 'Hymns'}
-        </Text>
-        <FlatList
-          data={filteredHymns.slice(0, 3)}
-          renderItem={renderHymnItem}
-          keyExtractor={(item) => item.id}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.listContainer}
-        />
-      </View>
-
-      {/* Music section */}
-      <View style={styles.section}>
-        <Text style={[styles.sectionTitle, { color: colors.text }]}>
-          {translations.music || 'Music'}
-        </Text>
-        <FlatList
-          data={filteredSongs.slice(0, 3)}
-          renderItem={renderSongItem}
-          keyExtractor={(item) => item.id}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.listContainer}
-        />
-      </View>
+          <FlatList
+            data={CATEGORIES}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            keyExtractor={(item) => item.id}
+            contentContainerStyle={styles.listContainer}
+            renderItem={({ item }) => (
+              <TouchableOpacity
+                style={[styles.card, { backgroundColor: colors.card }]}
+                onPress={() =>
+                  router.push({
+                    pathname: '/(tabs)/songs/music',
+                    params: { category: item.id },
+                  })
+                }
+              >
+                <Text style={[styles.cardTitle, { color: colors.text }]}>
+                  {item.label}
+                </Text>
+                <Text
+                  style={[styles.cardContent, { color: colors.textSecondary }]}
+                  numberOfLines={3}
+                >
+                  {item.description}
+                </Text>
+                <Text style={[styles.metaText, { color: colors.primary }]}>
+                  Explore
+                </Text>
+              </TouchableOpacity>
+            )}
+          />
+        </View>
+      </ScrollView>
     </SafeAreaWrapper>
   );
 }
 
 const styles = StyleSheet.create({
-  searchContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-  },
-  searchIcon: {
-    position: 'absolute',
-    left: 36,
-    zIndex: 1,
-  },
-  searchInput: {
-    flex: 1,
-    paddingLeft: 40,
-    marginBottom: 0,
-  },
   tabsContainer: {
     flexDirection: 'row',
     paddingHorizontal: 20,
@@ -240,8 +231,9 @@ const styles = StyleSheet.create({
     elevation: 5,
   },
   cardTitle: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: '600',
+    flexGrow: 1,
     marginBottom: 8,
   },
   cardContent: {

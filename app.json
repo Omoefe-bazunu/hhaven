@@ -1,15 +1,21 @@
 {
   "expo": {
-    "name": "Haven",
-    "slug": "haven",
+    "name": "Grace",
+    "slug": "grace",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
-    "scheme": "haven",
+    "scheme": "grace",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "UIBackgroundModes": ["audio"]
+      }
+    },
+    "android": {
+      "permissions": ["android.permission.WAKE_LOCK"]
     },
     "web": {
       "bundler": "metro",

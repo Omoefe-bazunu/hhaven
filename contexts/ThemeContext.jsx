@@ -14,6 +14,8 @@ const lightColors = {
   error: '#EF4444',
   success: '#059669',
   warning: '#F59E0B',
+  skeleton: '#E0E0E0',
+  skeletonHighlight: '#F5F5F5',
 };
 
 const darkColors = {
@@ -28,6 +30,8 @@ const darkColors = {
   error: '#F87171',
   success: '#34D399',
   warning: '#FBBF24',
+  skeleton: '#374151',
+  skeletonHighlight: '#4B5563',
 };
 
 const ThemeContext = createContext(undefined);

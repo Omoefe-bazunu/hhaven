@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -13,59 +13,79 @@ import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
 import { SafeAreaWrapper } from '../../components/ui/SafeAreaWrapper';
 import { TopNavigation } from '../../components/TopNavigation';
-import {
-  mockHymns,
-  mockSermons,
-  mockSongs,
-  mockVideos,
-} from '../../data/mockData';
+import { getRecentContent } from '../../services/dataService';
 import { ChevronRight, Play, Clock } from 'lucide-react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+
+const SkeletonCard = ({ type }) => {
+  const { colors } = useTheme();
+  return (
+    <View
+      style={[
+        styles.card,
+        type === 'video' ? styles.videoCard : {},
+        { backgroundColor: colors.card },
+      ]}
+    >
+      {type === 'video' && (
+        <LinearGradient
+          colors={[colors.skeleton, colors.skeletonHighlight]}
+          style={styles.videoThumbnail}
+        />
+      )}
+      <View style={type === 'video' ? styles.videoInfo : {}}>
+        <LinearGradient
+          colors={[colors.skeleton, colors.skeletonHighlight]}
+          style={styles.skeletonTitle}
+        />
+        <LinearGradient
+          colors={[colors.skeleton, colors.skeletonHighlight]}
+          style={styles.skeletonSubtitle}
+        />
+        {type !== 'video' && (
+          <View style={styles.cardFooter}>
+            <LinearGradient
+              colors={[colors.skeleton, colors.skeletonHighlight]}
+              style={styles.skeletonAction}
+            />
+          </View>
+        )}
+      </View>
+    </View>
+  );
+};
 
 export default function HomeScreen() {
-  // Access language, user, and theme contexts
   const { translations, currentLanguage } = useLanguage();
   const { user } = useAuth();
   const { colors } = useTheme();
+  const [content, setContent] = useState({
+    sermons: [],
+    songs: [],
+    videos: [],
+  });
+  const [loading, setLoading] = useState(true);
 
-  // Get translated content for an item, defaulting to English or item itself
+  useEffect(() => {
+    const fetchContent = async () => {
+      try {
+        const data = await getRecentContent();
+        setContent(data);
+      } catch (error) {
+        console.error('Error fetching recent content:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchContent();
+  }, []);
+
   const getTranslatedContent = (item) => {
     return (
       item.translations?.[currentLanguage] || item.translations?.en || item
     );
   };
 
-  // Render hymn card with title, content, and listen action
-  const renderHymnCard = (hymn) => {
-    const content = getTranslatedContent(hymn);
-    return (
-      <TouchableOpacity
-        key={hymn.id}
-        style={[styles.card, { backgroundColor: colors.card }]}
-        onPress={() => router.push(`/(tabs)/hymns/${hymn.id}`)}
-      >
-        <Text
-          style={[styles.cardTitle, { color: colors.text }]}
-          numberOfLines={1}
-        >
-          {content.title}
-        </Text>
-        <Text
-          style={[styles.cardSubtitle, { color: colors.textSecondary }]}
-          numberOfLines={2}
-        >
-          {content.content}
-        </Text>
-        <View style={styles.cardFooter}>
-          <Play size={16} color={colors.primary} />
-          <Text style={[styles.cardAction, { color: colors.primary }]}>
-            Listen
-          </Text>
-        </View>
-      </TouchableOpacity>
-    );
-  };
-
-  // Render sermon card with title, content, and duration
   const renderSermonCard = (sermon) => {
     const content = getTranslatedContent(sermon);
     return (
@@ -84,24 +104,24 @@ export default function HomeScreen() {
           style={[styles.cardSubtitle, { color: colors.textSecondary }]}
           numberOfLines={2}
         >
-          {content.content}
+          {content.content || translations.noContent}
         </Text>
         <View style={styles.cardFooter}>
-          <Clock size={16} color={colors.primary} />
+          {/* <Clock size={16} color={colors.primary} /> */}
           <Text style={[styles.cardAction, { color: colors.primary }]}>
-            {sermon.duration}
+            {/* {sermon.duration || translations.unknownDuration} */}
+            Start studying
           </Text>
         </View>
       </TouchableOpacity>
     );
   };
 
-  // Render song card with title, style, and duration
   const renderSongCard = (song) => (
     <TouchableOpacity
       key={song.id}
       style={[styles.card, { backgroundColor: colors.card }]}
-      onPress={() => router.push('/(tabs)/music')}
+      onPress={() => router.push(`/(tabs)/songs/music/${song.id}`)}
     >
       <Text
         style={[styles.cardTitle, { color: colors.text }]}
@@ -110,18 +130,17 @@ export default function HomeScreen() {
         {song.title}
       </Text>
       <Text style={[styles.cardSubtitle, { color: colors.textSecondary }]}>
-        {song.style}
+        Category: {song.category || translations.unknownCategory}
       </Text>
       <View style={styles.cardFooter}>
         <Play size={16} color={colors.primary} />
         <Text style={[styles.cardAction, { color: colors.primary }]}>
-          {song.duration}
+          Play now
         </Text>
       </View>
     </TouchableOpacity>
   );
 
-  // Render video card with thumbnail, title, and duration
   const renderVideoCard = (video) => (
     <TouchableOpacity
       key={video.id}
@@ -140,30 +159,34 @@ export default function HomeScreen() {
           {video.title}
         </Text>
         <Text style={[styles.cardSubtitle, { color: colors.textSecondary }]}>
-          {video.duration}
+          {/* {video.duration || translations.unknownDuration} */} Watch Now
         </Text>
       </View>
     </TouchableOpacity>
   );
 
-  // Main render: Safe area wrapper with navigation and scrollable content
+  const renderSkeletonCards = (type) => (
+    <>
+      <SkeletonCard type={type} />
+      <SkeletonCard type={type} />
+      <SkeletonCard type={type} />
+    </>
+  );
+
   return (
     <SafeAreaWrapper>
-      <TopNavigation title="Haven" />
+      <TopNavigation title="Grace" />
       <ScrollView
         style={[styles.content, { backgroundColor: colors.background }]}
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.welcomeSection}>
-          {/* <Text style={[styles.greeting, { color: colors.text }]}>
-            {translations.welcomeBack}
-          </Text> */}
           <Text style={[styles.userEmail, { color: colors.textSecondary }]}>
             {user?.email || translations.guest}
           </Text>
         </View>
 
-        {/* Sermons section with horizontal scroll */}
+        {/* Sermons section */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={[styles.sectionTitle, { color: colors.text }]}>
@@ -183,17 +206,21 @@ export default function HomeScreen() {
             showsHorizontalScrollIndicator={false}
             style={styles.horizontalScroll}
           >
-            {mockSermons.slice(0, 3).map(renderSermonCard)}
+            {loading || content.sermons.length === 0
+              ? renderSkeletonCards('sermon')
+              : content.sermons.map(renderSermonCard)}
           </ScrollView>
         </View>
 
-        {/* Music section with horizontal scroll */}
+        {/* Recent Music section */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={[styles.sectionTitle, { color: colors.text }]}>
-              {translations.featuredMusic}
+              {translations.recentMusic}
             </Text>
-            <TouchableOpacity onPress={() => router.push('/(tabs)/music')}>
+            <TouchableOpacity
+              onPress={() => router.push('/(tabs)/songs/music')}
+            >
               <View style={styles.seeAllContainer}>
                 <Text style={[styles.seeAll, { color: colors.primary }]}>
                   {translations.seeAll}
@@ -207,11 +234,13 @@ export default function HomeScreen() {
             showsHorizontalScrollIndicator={false}
             style={styles.horizontalScroll}
           >
-            {mockSongs.slice(0, 3).map(renderSongCard)}
+            {loading || content.songs.length === 0
+              ? renderSkeletonCards('song')
+              : content.songs.map(renderSongCard)}
           </ScrollView>
         </View>
 
-        {/* Animations section with horizontal scroll */}
+        {/* Animations section */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={[styles.sectionTitle, { color: colors.text }]}>
@@ -231,7 +260,9 @@ export default function HomeScreen() {
             showsHorizontalScrollIndicator={false}
             style={styles.horizontalScroll}
           >
-            {mockVideos.slice(0, 3).map(renderVideoCard)}
+            {loading || content.videos.length === 0
+              ? renderSkeletonCards('video')
+              : content.videos.map(renderVideoCard)}
           </ScrollView>
         </View>
         <View style={styles.bottomSpacer} />
@@ -248,15 +279,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 8,
   },
-  greeting: {
-    fontSize: 24,
-    fontWeight: '700',
-    letterSpacing: -0.5,
-  },
   userEmail: {
     fontSize: 16,
     marginTop: 8,
-    opacity: 0.7,
+    opacity: 0.8,
   },
   section: {
     marginBottom: 24,
@@ -300,12 +326,13 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: 16,
     fontWeight: '600',
+    testTransform: 'uppercase',
     marginBottom: 8,
   },
   cardSubtitle: {
     fontSize: 14,
     lineHeight: 20,
-    opacity: 0.7,
+    opacity: 0.85,
     marginBottom: 12,
   },
   cardFooter: {
@@ -337,6 +364,23 @@ const styles = StyleSheet.create({
   },
   videoInfo: {
     padding: 16,
+  },
+  skeletonTitle: {
+    height: 20,
+    width: '80%',
+    borderRadius: 4,
+    marginBottom: 8,
+  },
+  skeletonSubtitle: {
+    height: 16,
+    width: '60%',
+    borderRadius: 4,
+    marginBottom: 12,
+  },
+  skeletonAction: {
+    height: 16,
+    width: 60,
+    borderRadius: 4,
   },
   bottomSpacer: {
     height: 24,

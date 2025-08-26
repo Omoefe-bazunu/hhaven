@@ -10,12 +10,14 @@ const translations = {
     home: 'Home',
     hymns: 'Hymns',
     sermons: 'Sermons',
+    songs: 'Songs',
     animations: 'Animations',
     profile: 'Profile',
     music: 'Music',
     contact: 'Contact',
     about: 'About',
     admin: 'Admin',
+    notices: 'Notices',
 
     // Common
     search: 'Search',
@@ -33,6 +35,12 @@ const translations = {
     password: 'Password',
     name: 'Name',
     message: 'Message',
+    noSermons: 'No sermons available',
+    noSongs: 'No songs available',
+    noVideos: 'No videos available',
+    noContent: 'No content available',
+    unknownDuration: 'Unknown duration',
+    unknownStyle: 'Unknown style',
 
     // Onboarding
     welcome: 'Welcome to Haven',
@@ -55,7 +63,7 @@ const translations = {
 
     // Home
     latestSermons: 'Latest Sermons',
-    featuredMusic: 'Featured Music',
+    recentMusic: 'Recent Music',
     recentAnimations: 'Recent Animations',
 
     // Content
@@ -92,12 +100,14 @@ const translations = {
     home: 'Ile',
     hymns: 'Orin Iyin',
     sermons: 'Iwasu',
+    songs: 'Orin',
     animations: 'Aworan Eré',
     profile: 'Profaili',
     music: 'Orin',
     contact: 'Olubasọrọ',
     about: 'Nipa Wa',
     admin: 'Olutọju',
+    notices: 'Awọn Iwifun',
 
     // Common
     search: 'Wa',
@@ -115,6 +125,12 @@ const translations = {
     password: 'Ọrọ Igbaniwọle',
     name: 'Orukọ',
     message: 'Ifiranṣẹ',
+    noSermons: 'Ko si iwasu to wa',
+    noSongs: 'Ko si orin to wa',
+    noVideos: 'Ko si aworan eré to wa',
+    noContent: 'Ko si akoonu to wa',
+    unknownDuration: 'Idasile ti a ko mọ',
+    unknownStyle: 'Ara ti a ko mọ',
 
     // Auth
     loginTitle: 'Kaabo Pada',
@@ -124,15 +140,15 @@ const translations = {
     dontHaveAccount: 'Ko ni akaunto?',
 
     // Home
-    latestHymns: 'Orin Iyin Tuntun',
     latestSermons: 'Iwasu Tuntun',
-    featuredMusic: 'Orin Pataki',
+    recentMusic: 'Orin Tuntun',
     recentAnimations: 'Aworan Eré Tuntun',
   },
   fr: {
     // Navigation
     home: 'Accueil',
     hymns: 'Cantiques',
+    songs: 'Chansons',
     sermons: 'Sermons',
     animations: 'Animations',
     profile: 'Profil',
@@ -140,6 +156,7 @@ const translations = {
     contact: 'Contact',
     about: 'À Propos',
     admin: 'Admin',
+    notices: 'Avis',
 
     // Common
     search: 'Rechercher',
@@ -157,6 +174,12 @@ const translations = {
     password: 'Mot de passe',
     name: 'Nom',
     message: 'Message',
+    noSermons: 'Aucun sermon disponible',
+    noSongs: 'Aucune chanson disponible',
+    noVideos: 'Aucune animation disponible',
+    noContent: 'Aucun contenu disponible',
+    unknownDuration: 'Durée inconnue',
+    unknownStyle: 'Style inconnu',
 
     // Auth
     loginTitle: 'Bon Retour',
@@ -164,6 +187,11 @@ const translations = {
     confirmPassword: 'Confirmer le mot de passe',
     alreadyHaveAccount: 'Vous avez déjà un compte?',
     dontHaveAccount: "Vous n'avez pas de compte?",
+
+    // Home
+    latestSermons: 'Derniers Sermons',
+    recentMusic: 'Musique Récente',
+    recentAnimations: 'Animations Récentes',
   },
 };
 

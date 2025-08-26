@@ -24,28 +24,46 @@ export default function SignupScreen() {
 
   const handleSignup = async () => {
     if (!email || !password || !confirmPassword) {
-      Alert.alert('Error', 'Please fill in all fields');
+      Alert.alert(
+        'Error',
+        translations.fillAllFields || 'Please fill in all fields'
+      );
       return;
     }
 
     if (password !== confirmPassword) {
-      Alert.alert('Error', 'Passwords do not match');
+      Alert.alert(
+        'Error',
+        translations.passwordsDontMatch || 'Passwords do not match'
+      );
       return;
     }
 
     if (password.length < 6) {
-      Alert.alert('Error', 'Password must be at least 6 characters');
+      Alert.alert(
+        'Error',
+        translations.passwordTooShort ||
+          'Password must be at least 6 characters'
+      );
       return;
     }
 
     setIsLoading(true);
-    const success = await signup(email, password);
-    setIsLoading(false);
-
-    if (success) {
-      router.replace('/(tabs)/home');
-    } else {
-      Alert.alert('Error', 'Failed to create account');
+    try {
+      const success = await signup(email.trim(), password);
+      if (success) {
+        router.replace('/(tabs)/home');
+      } else {
+        Alert.alert(
+          'Error',
+          translations.signupFailed || 'Failed to create account'
+        );
+      }
+    } catch (error) {
+      console.error('Signup failed:', error);
+      Alert.alert('Signup Error', error.message || 'Something went wrong');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -70,7 +88,7 @@ export default function SignupScreen() {
             onChangeText={setEmail}
             keyboardType="email-address"
             autoCapitalize="none"
-            placeholder="Enter your email"
+            placeholder={translations.enterEmail || 'Enter your email'}
           />
 
           <Input
@@ -78,7 +96,7 @@ export default function SignupScreen() {
             value={password}
             onChangeText={setPassword}
             secureTextEntry
-            placeholder="Enter your password"
+            placeholder={translations.enterPassword || 'Enter your password'}
           />
 
           <Input
@@ -86,7 +104,9 @@ export default function SignupScreen() {
             value={confirmPassword}
             onChangeText={setConfirmPassword}
             secureTextEntry
-            placeholder="Confirm your password"
+            placeholder={
+              translations.confirmPasswordPlaceholder || 'Confirm your password'
+            }
           />
 
           <Button
@@ -101,6 +121,7 @@ export default function SignupScreen() {
         <TouchableOpacity
           style={styles.loginLink}
           onPress={() => router.push('/(auth)/login')}
+          disabled={isLoading}
         >
           <Text style={styles.loginText}>
             {translations.alreadyHaveAccount}{' '}

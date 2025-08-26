@@ -9,30 +9,25 @@ import {
 } from 'react-native';
 import { router } from 'expo-router';
 import { ArrowLeft, Mail, Heart, Globe } from 'lucide-react-native';
-import { useLanguage } from '../../contexts/LanguageContext';
-import { LanguageSwitcher } from '../../components/LanguageSwitcher';
-import { mockAboutInfo } from '../../data/mockData';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { LanguageSwitcher } from '@/components/LanguageSwitcher';
+import { mockAboutInfo } from '@/data/mockData';
+import { TopNavigation } from '@/components/TopNavigation';
 
 export default function AboutScreen() {
   const { translations } = useLanguage();
 
   return (
     <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => router.back()}
-        >
-          <ArrowLeft size={24} color="#1F2937" />
-        </TouchableOpacity>
-        <Text style={styles.title}>{translations.about}</Text>
-        <LanguageSwitcher />
-      </View>
-
+      <TopNavigation
+        title={translations.about}
+        showBackButton={true}
+        onPress={() => router.back()}
+      />
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.logoContainer}>
           <Text style={styles.logo}>🏠</Text>
-          <Text style={styles.appName}>Haven</Text>
+          <Text style={styles.appName}>Grace</Text>
           <Text style={styles.version}>Version {mockAboutInfo.version}</Text>
         </View>
 
@@ -67,10 +62,10 @@ export default function AboutScreen() {
 
         <View style={styles.footer}>
           <Text style={styles.footerText}>
-            © 2025 Haven Church App. All rights reserved.
+            © 2025 God's Kingdom Society. All rights reserved.
           </Text>
           <Text style={styles.footerSubtext}>
-            Spreading God's love through technology
+            Towards God's perfect government
           </Text>
         </View>
       </ScrollView>

@@ -1,94 +1,186 @@
-import React, { useState } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   SafeAreaView,
   TouchableOpacity,
-  Image,
+  Share,
 } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
-import {
-  ArrowLeft,
-  Play,
-  Pause,
-  RotateCcw,
-  Volume2,
-} from 'lucide-react-native';
+import { VideoView, useVideoPlayer } from 'expo-video';
+import * as Clipboard from 'expo-clipboard';
+import { ArrowLeft, Share2 } from 'lucide-react-native';
 import { LanguageSwitcher } from '../../../components/LanguageSwitcher';
-import { mockVideos } from '../../../data/mockData';
+import { useTheme } from '../../../contexts/ThemeContext';
+import { useLanguage } from '../../../contexts/LanguageContext';
+import { getVideo } from '../../../services/dataService';
+import { LinearGradient } from 'expo-linear-gradient';
+
+const SkeletonVideo = () => {
+  const { colors } = useTheme();
+  return (
+    <View style={styles.container}>
+      <View style={[styles.header, { backgroundColor: colors.card }]}>
+        <LinearGradient
+          colors={[colors.skeleton, colors.skeletonHighlight]}
+          style={styles.skeletonTitle}
+        />
+      </View>
+      <View style={styles.videoContainer}>
+        <LinearGradient
+          colors={[colors.skeleton, colors.skeletonHighlight]}
+          style={styles.videoPlayer}
+        />
+      </View>
+      <View style={[styles.videoInfo, { backgroundColor: colors.card }]}>
+        <LinearGradient
+          colors={[colors.skeleton, colors.skeletonHighlight]}
+          style={styles.skeletonTitle}
+        />
+        <View style={styles.metaInfo}>
+          <LinearGradient
+            colors={[colors.skeleton, colors.skeletonHighlight]}
+            style={styles.skeletonMeta}
+          />
+          <LinearGradient
+            colors={[colors.skeleton, colors.skeletonHighlight]}
+            style={styles.skeletonMeta}
+          />
+        </View>
+      </View>
+      <View style={[styles.controls, { backgroundColor: colors.card }]}>
+        {[...Array(5)].map((_, index) => (
+          <LinearGradient
+            key={index}
+            colors={[colors.skeleton, colors.skeletonHighlight]}
+            style={styles.skeletonControl}
+          />
+        ))}
+      </View>
+    </View>
+  );
+};
 
 export default function AnimationDetailScreen() {
   const { id } = useLocalSearchParams();
-  const [isPlaying, setIsPlaying] = useState(false);
+  const [video, setVideo] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const { translations } = useLanguage();
+  const { colors } = useTheme();
 
-  const video = mockVideos.find((v) => v.id === id);
+  // Create the video player instance
+  const player = useVideoPlayer();
+
+  useEffect(() => {
+    const fetchVideo = async () => {
+      try {
+        const videoData = await getVideo(id);
+        setVideo(videoData);
+      } catch (error) {
+        console.error('Error fetching video:', error);
+        setVideo(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchVideo();
+  }, [id]);
+
+  useEffect(() => {
+    // Correctly load the video source into the player instance
+    if (video?.videoUrl) {
+      player.replace({ uri: video.videoUrl });
+    }
+  }, [video, player]);
+
+  const handleCopyLink = async () => {
+    try {
+      await Clipboard.setStringAsync(video.videoUrl);
+      alert(translations.linkCopied || 'Link copied to clipboard!');
+    } catch (error) {
+      console.error('Error copying link:', error);
+    }
+  };
+
+  const handleShare = async () => {
+    try {
+      await Share.share({
+        message: `${video.title || translations.noTitle}: ${video.videoUrl}`,
+        title: translations.shareVideo || 'Share Video',
+      });
+    } catch (error) {
+      console.error('Error sharing video:', error);
+    }
+  };
+
+  if (loading) {
+    return <SkeletonVideo />;
+  }
 
   if (!video) {
     return (
-      <SafeAreaView style={styles.container}>
-        <Text style={styles.error}>Video not found</Text>
+      <SafeAreaView
+        style={[styles.container, { backgroundColor: colors.background }]}
+      >
+        <Text style={[styles.error, { color: colors.error }]}>
+          {translations.errorVideoNotFound || 'Video not found'}
+        </Text>
       </SafeAreaView>
     );
   }
 
-  const handlePlayPause = () => {
-    setIsPlaying(!isPlaying);
-  };
-
   return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.header}>
+    <SafeAreaView
+      style={[styles.container, { backgroundColor: colors.background }]}
+    >
+      {/* Header */}
+      <View style={[styles.header, { backgroundColor: colors.card }]}>
         <TouchableOpacity
           style={styles.backButton}
           onPress={() => router.back()}
         >
-          <ArrowLeft size={24} color="#1F2937" />
+          <ArrowLeft size={24} color={colors.text} />
         </TouchableOpacity>
         <LanguageSwitcher />
       </View>
 
-      <View style={styles.content}>
-        <View style={styles.videoContainer}>
-          <Image
-            source={{ uri: video.thumbnailUrl }}
-            style={styles.videoPlayer}
-          />
-          <View style={styles.videoOverlay}>
-            <TouchableOpacity
-              style={styles.playButton}
-              onPress={handlePlayPause}
-            >
-              {isPlaying ? (
-                <Pause size={48} color="#FFFFFF" />
-              ) : (
-                <Play size={48} color="#FFFFFF" />
-              )}
-            </TouchableOpacity>
-          </View>
-        </View>
+      {/* Video Player - with native controls */}
+      <View style={styles.videoContainer}>
+        <VideoView
+          style={styles.videoPlayer}
+          player={player}
+          // THIS IS THE KEY CHANGE
+          nativeControls={true}
+          contentFit="contain"
+        />
+      </View>
 
-        <View style={styles.videoInfo}>
-          <Text style={styles.title}>{video.title}</Text>
-          <View style={styles.metaInfo}>
-            <Text style={styles.metaText}>Duration: {video.duration}</Text>
-            <Text style={styles.metaText}>
-              Language: {video.languageCategory}
-            </Text>
-          </View>
+      {/* Video Info */}
+      <View style={[styles.videoInfo, { backgroundColor: colors.card }]}>
+        <Text style={[styles.title, { color: colors.text }]}>
+          {video.title || translations.noTitle}
+        </Text>
+        <View style={styles.metaInfo}>
+          <Text style={[styles.metaText, { color: colors.textSecondary }]}>
+            {translations.duration}:{' '}
+            {video.duration || translations.unknownDuration}
+          </Text>
+          <Text style={[styles.metaText, { color: colors.textSecondary }]}>
+            {translations.language}:{' '}
+            {video.languageCategory || translations.unknownCategory}
+          </Text>
         </View>
+      </View>
 
-        <View style={styles.controls}>
-          <TouchableOpacity style={styles.controlButton}>
-            <RotateCcw size={24} color="#1E3A8A" />
-            <Text style={styles.controlText}>Restart</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.controlButton}>
-            <Volume2 size={24} color="#1E3A8A" />
-            <Text style={styles.controlText}>Audio</Text>
-          </TouchableOpacity>
-        </View>
+      {/* Controls */}
+      <View style={[styles.controls, { backgroundColor: colors.card }]}>
+        <TouchableOpacity style={styles.controlButton} onPress={handleShare}>
+          <Share2 size={24} color={colors.primary} />
+          <Text style={[styles.controlText, { color: colors.primary }]}>
+            {translations.share || 'Share'}
+          </Text>
+        </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
@@ -97,7 +189,6 @@ export default function AnimationDetailScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000000',
   },
   header: {
     flexDirection: 'row',
@@ -105,18 +196,17 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 20,
     paddingVertical: 16,
-    backgroundColor: '#FFFFFF',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
   },
   backButton: {
     padding: 8,
   },
-  content: {
-    flex: 1,
-  },
   videoContainer: {
-    position: 'relative',
-    aspectRatio: 16 / 9,
+    flex: 1,
     backgroundColor: '#000000',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   videoPlayer: {
     width: '100%',
@@ -130,7 +220,6 @@ const styles = StyleSheet.create({
     bottom: 0,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.3)',
   },
   playButton: {
     backgroundColor: 'rgba(30, 58, 138, 0.8)',
@@ -138,13 +227,11 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   videoInfo: {
-    backgroundColor: '#FFFFFF',
     padding: 20,
   },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#1F2937',
     marginBottom: 12,
   },
   metaInfo: {
@@ -153,29 +240,45 @@ const styles = StyleSheet.create({
   },
   metaText: {
     fontSize: 14,
-    color: '#6B7280',
+    opacity: 0.9,
   },
   controls: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     justifyContent: 'space-around',
-    backgroundColor: '#FFFFFF',
-    paddingVertical: 20,
+    paddingVertical: 12,
     borderTopWidth: 1,
     borderTopColor: '#E5E7EB',
   },
   controlButton: {
     alignItems: 'center',
-    gap: 8,
+    margin: 8,
   },
   controlText: {
     fontSize: 12,
-    color: '#1E3A8A',
     fontWeight: '600',
   },
   error: {
     fontSize: 18,
-    color: '#EF4444',
     textAlign: 'center',
     marginTop: 50,
+  },
+  skeletonTitle: {
+    height: 24,
+    width: '60%',
+    borderRadius: 4,
+    marginVertical: 8,
+    marginHorizontal: 20,
+  },
+  skeletonMeta: {
+    height: 14,
+    width: '40%',
+    borderRadius: 4,
+  },
+  skeletonControl: {
+    height: 40,
+    width: 60,
+    borderRadius: 4,
+    margin: 8,
   },
 });

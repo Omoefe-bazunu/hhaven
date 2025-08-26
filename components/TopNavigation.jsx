@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -19,11 +19,48 @@ import {
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
 import { LanguageSwitcher } from './LanguageSwitcher';
+import {
+  subscribeToNotices,
+  subscribeToReadNotices,
+} from '../services/dataService'; // Import new functions
 
 export function TopNavigation({ title, showBackButton = false }) {
   const { colors, isDark, toggleTheme } = useTheme();
-  const { isAdmin } = useAuth();
+  const { isAdmin, user } = useAuth();
   const [showMenu, setShowMenu] = useState(false);
+  const [notices, setNotices] = useState([]);
+  const [readNoticeIds, setReadNoticeIds] = useState([]);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  // Subscribe to real-time notices and read notices
+  useEffect(() => {
+    // Subscribe to all notices
+    const unsubscribeNotices = subscribeToNotices((newNotices) => {
+      setNotices(newNotices);
+    });
+
+    // Subscribe to the user's read notices
+    const userId = user?.uid;
+    const unsubscribeReadNotices = subscribeToReadNotices(
+      userId,
+      (newReadIds) => {
+        setReadNoticeIds(newReadIds);
+      }
+    );
+
+    // Cleanup subscriptions on unmount
+    return () => {
+      unsubscribeNotices();
+      unsubscribeReadNotices();
+    };
+  }, [user]);
+
+  // Calculate unread count whenever notices or read notices change
+  useEffect(() => {
+    const readSet = new Set(readNoticeIds);
+    const count = notices.filter((notice) => !readSet.has(notice.id)).length;
+    setUnreadCount(count);
+  }, [notices, readNoticeIds]);
 
   const menuItems = [
     {
@@ -31,7 +68,7 @@ export function TopNavigation({ title, showBackButton = false }) {
       title: 'About',
       onPress: () => {
         setShowMenu(false);
-        router.push('/about');
+        router.push('/profile/about');
       },
     },
     {
@@ -39,7 +76,7 @@ export function TopNavigation({ title, showBackButton = false }) {
       title: 'Contact',
       onPress: () => {
         setShowMenu(false);
-        router.push('/contact');
+        router.push('/profile/contact');
       },
     },
     {
@@ -62,13 +99,15 @@ export function TopNavigation({ title, showBackButton = false }) {
       title: 'Admin',
       onPress: () => {
         setShowMenu(false);
-        router.push('/admin');
+        router.push('/profile/admin');
       },
     });
   }
 
+  // Handle tap on the notifications bell
   const handleNotifications = () => {
-    Alert.alert('Notifications', 'No new notifications');
+    // Navigate to a new screen to view notices instead of an alert
+    router.push('/profile/notices');
   };
 
   return (
@@ -91,6 +130,13 @@ export function TopNavigation({ title, showBackButton = false }) {
             onPress={handleNotifications}
           >
             <Bell size={20} color={colors.text} />
+            {unreadCount > 0 && (
+              <View style={[styles.badge, { backgroundColor: colors.accent }]}>
+                <Text style={[styles.badgeText, { color: 'red' }]}>
+                  {unreadCount}
+                </Text>
+              </View>
+            )}
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -160,6 +206,25 @@ const styles = StyleSheet.create({
   },
   iconButton: {
     padding: 8,
+    position: 'relative',
+  },
+  badge: {
+    position: 'absolute',
+    top: 4,
+    right: 4,
+    minWidth: 18,
+    height: 18,
+    borderRadius: 9,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 4,
+  },
+  badgeText: {
+    fontSize: 12,
+    fontWeight: 'bold',
+    borderWidth: 1,
+    borderColor: 'red',
+    borderRadius: 100,
   },
   overlay: {
     flex: 1,
