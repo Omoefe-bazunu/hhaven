@@ -14,9 +14,6 @@ import {
 } from 'firebase/firestore';
 import { db } from './firebaseConfig';
 
-// ==========================================
-// SERMONS DATA SERVICE
-// ==========================================
 export const getSermons = async () => {
   try {
     const sermonsRef = collection(db, 'sermons');
@@ -106,9 +103,6 @@ export const getSermon = async (sermonId) => {
   }
 };
 
-// ==========================================
-// SONGS DATA SERVICE
-// ==========================================
 export const getSongs = async () => {
   try {
     const songsRef = collection(db, 'songs');
@@ -237,9 +231,6 @@ export const getSong = async (songId) => {
   }
 };
 
-// ==========================================
-// VIDEOS DATA SERVICE
-// ==========================================
 export const getVideos = async () => {
   try {
     const videosRef = collection(db, 'videos');
@@ -327,9 +318,6 @@ const getDefaultThumbnail = () => {
   return 'https://images.pexels.com/photos/8879724/pexels-photo-8879724.jpeg?auto=compress&cs=tinysrgb&w=800';
 };
 
-// ==========================================
-// NOTICES DATA SERVICE
-// ==========================================
 export const getNotices = async () => {
   try {
     const noticesRef = collection(db, 'notices');
@@ -388,7 +376,6 @@ export const subscribeToNotices = (callback) => {
   );
 };
 
-// New functions for tracking read notices
 export const markNoticeAsRead = async (userId, noticeId) => {
   try {
     const docRef = doc(db, 'users', userId, 'readNotices', noticeId);
@@ -416,7 +403,7 @@ export const getReadNoticesIds = async (userId) => {
 export const subscribeToReadNotices = (userId, callback) => {
   if (!userId) {
     callback([]);
-    return () => {}; // Return a no-op unsubscribe function
+    return () => {};
   }
   const readNoticesRef = collection(db, 'users', userId, 'readNotices');
   return onSnapshot(
@@ -432,9 +419,6 @@ export const subscribeToReadNotices = (userId, callback) => {
   );
 };
 
-// ==========================================
-// CONTACT MESSAGES DATA SERVICE
-// ==========================================
 export const addContactMessage = async (messageData) => {
   try {
     const docRef = await addDoc(collection(db, 'contactMessages'), {
@@ -470,9 +454,6 @@ export const subscribeToContactMessages = (callback) => {
   );
 };
 
-// ==========================================
-// GENERIC DATA FETCHERS
-// ==========================================
 export const getRecentContent = async () => {
   try {
     const [recentSermons, recentSongs, recentVideos] = await Promise.all([
@@ -498,6 +479,7 @@ export const getRecentContent = async () => {
       content.sermons.push({
         id: doc.id,
         title: data.title,
+        content: data.content || null,
         audioUrl: data.audioUrl || null,
         date: data.createdAt?.toDate()?.toISOString()?.split('T')[0],
       });
@@ -530,12 +512,10 @@ export const getRecentContent = async () => {
   }
 };
 
-// The core fix: searchContent now accepts the necessary functions as arguments
 export const searchContent = async (searchTerm, category = null) => {
   try {
     const searchTermLower = searchTerm.toLowerCase();
 
-    // Use the functions directly from the imported scope
     let allSongs = await getSongs();
     let allSermons = await getSermons();
     let allVideos = await getVideos();
@@ -563,9 +543,6 @@ export const searchContent = async (searchTerm, category = null) => {
   }
 };
 
-// ==========================================
-// APP INFO SERVICE
-// ==========================================
 export const getAppInfo = () => {
   return {
     version: '1.0.0',
@@ -575,4 +552,132 @@ export const getAppInfo = () => {
     churchMission:
       'To glorify God and make disciples of all nations through multilingual worship and biblical teaching.',
   };
+};
+
+export const addQuizResource = async (quizData) => {
+  try {
+    const docRef = await addDoc(collection(db, 'quizResources'), {
+      ...quizData,
+      createdAt: serverTimestamp(),
+    });
+    console.log('Quiz resource document written with ID: ', docRef.id);
+  } catch (e) {
+    console.error('Error adding quiz resource: ', e);
+    throw e;
+  }
+};
+
+export const addQuizHelpQuestion = async (questionData) => {
+  try {
+    const docRef = await addDoc(collection(db, 'quizHelpQuestions'), {
+      ...questionData,
+      createdAt: serverTimestamp(),
+    });
+    console.log('Quiz help question written with ID: ', docRef.id);
+  } catch (e) {
+    console.error('Error adding quiz help question: ', e);
+    throw e;
+  }
+};
+
+export const subscribeToQuizHelpQuestions = (callback) => {
+  const q = query(
+    collection(db, 'quizHelpQuestions'),
+    orderBy('createdAt', 'desc')
+  );
+
+  return onSnapshot(
+    q,
+    (snapshot) => {
+      const questions = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      callback(questions);
+    },
+    (error) => {
+      console.error('Error subscribing to quiz help questions: ', error);
+      callback([]);
+    }
+  );
+};
+
+export const getQuizResources = async () => {
+  try {
+    const quizRef = collection(db, 'quizResources');
+    const q = query(quizRef, orderBy('createdAt', 'desc'));
+    const querySnapshot = await getDocs(q);
+
+    const quizzes = [];
+    querySnapshot.forEach((doc) => {
+      const data = doc.data();
+      quizzes.push({
+        id: doc.id,
+        title: data.title,
+        age: data.age,
+        gender: data.gender,
+        year: data.year,
+        uploadedBy: data.uploadedBy,
+        createdAt: data.createdAt,
+      });
+    });
+
+    return quizzes;
+  } catch (error) {
+    console.error('Error fetching quizzes:', error);
+    return [];
+  }
+};
+
+export const getQuiz = async (quizId) => {
+  try {
+    const quizRef = doc(db, 'quizResources', quizId);
+    const quizSnap = await getDoc(quizRef);
+
+    if (quizSnap.exists()) {
+      const data = quizSnap.data();
+      return {
+        id: quizSnap.id,
+        title: data.title,
+        content: data.content,
+        age: data.age,
+        gender: data.gender,
+        year: data.year,
+        uploadedBy: data.uploadedBy,
+        createdAt: data.createdAt,
+      };
+    }
+    return null;
+  } catch (error) {
+    console.error('Error fetching quiz:', error);
+    return null;
+  }
+};
+
+export const subscribeToQuizzes = (callback) => {
+  const quizzesRef = collection(db, 'quizResources');
+  const q = query(quizzesRef, orderBy('createdAt', 'desc'));
+
+  return onSnapshot(
+    q,
+    (snapshot) => {
+      const quizzes = [];
+      snapshot.forEach((doc) => {
+        const data = doc.data();
+        quizzes.push({
+          id: doc.id,
+          title: data.title,
+          description: data.description,
+          questions: data.questions || [],
+          uploadedBy: data.uploadedBy,
+          createdAt: data.createdAt,
+        });
+      });
+      callback(quizzes);
+    },
+    (error) => {
+      console.error('Error listening to quizzes:', error);
+      callback([]);
+    }
+  );
 };

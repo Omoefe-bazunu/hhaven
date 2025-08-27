@@ -138,12 +138,9 @@ export default function NoticesScreen() {
   );
 
   return (
-    <SafeAreaWrapper
-      style={[styles.container, { backgroundColor: colors.background }]}
-    >
+    <SafeAreaWrapper>
       <TopNavigation
         title={translations.notices}
-        showBackButton={true}
         onPress={() => router.back()}
       />
       <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -166,9 +163,6 @@ export default function NoticesScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
   listContainer: {
     padding: 20,
   },

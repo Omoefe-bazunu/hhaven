@@ -11,24 +11,19 @@ import { router } from 'expo-router';
 import { ArrowLeft, Mail, Heart, Globe } from 'lucide-react-native';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
-import { mockAboutInfo } from '@/data/mockData';
 import { TopNavigation } from '@/components/TopNavigation';
 
 export default function AboutScreen() {
-  const { translations } = useLanguage();
+  const { translations, aboutUsInfo } = useLanguage();
 
   return (
     <SafeAreaView style={styles.container}>
-      <TopNavigation
-        title={translations.about}
-        showBackButton={true}
-        onPress={() => router.back()}
-      />
+      <TopNavigation title={translations.about} onPress={() => router.back()} />
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.logoContainer}>
           <Text style={styles.logo}>🏠</Text>
           <Text style={styles.appName}>Grace</Text>
-          <Text style={styles.version}>Version {mockAboutInfo.version}</Text>
+          <Text style={styles.version}>Version {aboutUsInfo.version}</Text>
         </View>
 
         <View style={styles.section}>
@@ -36,9 +31,7 @@ export default function AboutScreen() {
             <Heart size={24} color="#1E3A8A" />
             <Text style={styles.sectionTitle}>Our Mission</Text>
           </View>
-          <Text style={styles.sectionContent}>
-            {mockAboutInfo.churchMission}
-          </Text>
+          <Text style={styles.sectionContent}>{aboutUsInfo.churchMission}</Text>
         </View>
 
         <View style={styles.section}>
@@ -46,7 +39,7 @@ export default function AboutScreen() {
             <Globe size={24} color="#1E3A8A" />
             <Text style={styles.sectionTitle}>About Haven</Text>
           </View>
-          <Text style={styles.sectionContent}>{mockAboutInfo.content}</Text>
+          <Text style={styles.sectionContent}>{aboutUsInfo.content}</Text>
         </View>
 
         <View style={styles.section}>
@@ -57,7 +50,7 @@ export default function AboutScreen() {
           <Text style={styles.sectionContent}>
             For support and inquiries, please contact us at:
           </Text>
-          <Text style={styles.contactEmail}>{mockAboutInfo.contactEmail}</Text>
+          <Text style={styles.contactEmail}>{aboutUsInfo.contactEmail}</Text>
         </View>
 
         <View style={styles.footer}>

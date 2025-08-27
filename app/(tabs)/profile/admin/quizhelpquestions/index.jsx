@@ -16,11 +16,12 @@ import {
   MessageCircleOff,
   Send,
 } from 'lucide-react-native';
-import { LanguageSwitcher } from '../../../../../components/LanguageSwitcher';
-import { useTheme } from '../../../../../contexts/ThemeContext';
-import { subscribeToContactMessages } from '../../../../../services/dataService';
+import { LanguageSwitcher } from '@/components/LanguageSwitcher';
+import { useTheme } from '@/contexts/ThemeContext';
+import { subscribeToQuizHelpQuestions } from '@/services/dataService';
 import { LinearGradient } from 'expo-linear-gradient';
 import { TopNavigation } from '../../../../../components/TopNavigation';
+import { SafeAreaWrapper } from '../../../../../components/ui/SafeAreaWrapper';
 
 const SkeletonCard = () => {
   const { colors } = useTheme();
@@ -46,45 +47,19 @@ const SkeletonCard = () => {
   );
 };
 
-export default function MessagesScreen() {
-  const [messages, setMessages] = useState([]);
+export default function QuizHelpQuestionsScreen() {
+  const [messages, setQuestions] = useState([]);
   const [loading, setLoading] = useState(true);
   const { colors } = useTheme();
 
   useEffect(() => {
-    const unsubscribe = subscribeToContactMessages((newMessages) => {
-      setMessages(newMessages);
+    const unsubscribe = subscribeToQuizHelpQuestions((newMessages) => {
+      setQuestions(newMessages);
       setLoading(false);
     });
 
     return () => unsubscribe();
   }, []);
-
-  const getTypeColor = (type) => {
-    switch (type) {
-      case 'complaint':
-        return '#EF4444';
-      case 'suggestion':
-        return '#059669';
-      case 'request':
-        return '#F59E0B';
-      default:
-        return '#6B7280';
-    }
-  };
-
-  const getTypeBackground = (type) => {
-    switch (type) {
-      case 'complaint':
-        return '#FEF2F2';
-      case 'suggestion':
-        return '#ECFDF5';
-      case 'request':
-        return '#FFFBEB';
-      default:
-        return '#F9FAFB';
-    }
-  };
 
   const formatDate = (date) => {
     if (!date) return 'Unknown Date';
@@ -105,29 +80,17 @@ export default function MessagesScreen() {
             {item.name}
           </Text>
         </View>
-        <View
-          style={[
-            styles.typeBadge,
-            { backgroundColor: getTypeBackground(item.category) },
-          ]}
-        >
-          <Text
-            style={[styles.typeText, { color: getTypeColor(item.category) }]}
-          >
-            {item.category}
-          </Text>
-        </View>
       </View>
 
       <View style={styles.contactInfo}>
         <Mail size={14} color={colors.textSecondary} />
-        <Text style={[styles.email, { color: colors.textSecondary }]}>
-          {item.email}
+        <Text style={[styles.whatsapp, { color: colors.textSecondary }]}>
+          {item.whatsapp}
         </Text>
       </View>
 
       <Text style={[styles.messageText, { color: colors.text }]}>
-        {item.message}
+        {item.question}
       </Text>
 
       <View style={styles.messageFooter}>
@@ -147,10 +110,10 @@ export default function MessagesScreen() {
         style={styles.emptyIcon}
       />
       <Text style={[styles.emptyText, { color: colors.text }]}>
-        No Messages Found
+        No Questions Found
       </Text>
       <Text style={[styles.emptySubText, { color: colors.textSecondary }]}>
-        Contact messages from users will appear here.
+        Quiz Questions from users will appear here.
       </Text>
     </View>
   );
@@ -164,16 +127,11 @@ export default function MessagesScreen() {
     </>
   );
 
-  const totalMessages = messages.length;
-  const complaints = messages.filter((m) => m.category === 'complaint').length;
-  const suggestions = messages.filter(
-    (m) => m.category === 'suggestion'
-  ).length;
+  const totalQuestions = messages.length;
 
   return (
-    <SafeAreaView>
-      <TopNavigation title="Messages" />
-
+    <SafeAreaWrapper>
+      <TopNavigation title="Quiz Help Questions" />
       {loading ? (
         <View
           style={[
@@ -203,31 +161,14 @@ export default function MessagesScreen() {
         >
           <View style={styles.statItem}>
             <Text style={[styles.statNumber, { color: colors.primary }]}>
-              {totalMessages}
+              {totalQuestions}
             </Text>
             <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
-              Total Messages
-            </Text>
-          </View>
-          <View style={styles.statItem}>
-            <Text style={[styles.statNumber, { color: colors.error }]}>
-              {complaints}
-            </Text>
-            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
-              Complaints
-            </Text>
-          </View>
-          <View style={styles.statItem}>
-            <Text style={[styles.statNumber, { color: colors.success }]}>
-              {suggestions}
-            </Text>
-            <Text style={[styles.statLabel, { color: colors.textSecondary }]}>
-              Suggestions
+              Total Questions
             </Text>
           </View>
         </View>
       )}
-
       {loading ? (
         <View style={styles.listContainer}>{renderSkeletonCards()}</View>
       ) : (
@@ -240,22 +181,11 @@ export default function MessagesScreen() {
           ListEmptyComponent={renderEmptyComponent}
         />
       )}
-    </SafeAreaView>
+    </SafeAreaWrapper>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-  },
   backButton: {
     padding: 8,
   },
@@ -333,7 +263,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 12,
   },
-  email: {
+  whatsapp: {
     fontSize: 14,
     marginLeft: 6,
   },

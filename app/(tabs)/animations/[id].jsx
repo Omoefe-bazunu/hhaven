@@ -6,6 +6,7 @@ import {
   SafeAreaView,
   TouchableOpacity,
   Share,
+  ActivityIndicator,
 } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 import { VideoView, useVideoPlayer } from 'expo-video';
@@ -16,6 +17,7 @@ import { useTheme } from '../../../contexts/ThemeContext';
 import { useLanguage } from '../../../contexts/LanguageContext';
 import { getVideo } from '../../../services/dataService';
 import { LinearGradient } from 'expo-linear-gradient';
+import { SafeAreaWrapper } from '../../../components/ui/SafeAreaWrapper';
 
 const SkeletonVideo = () => {
   const { colors } = useTheme();
@@ -66,32 +68,63 @@ export default function AnimationDetailScreen() {
   const { id } = useLocalSearchParams();
   const [video, setVideo] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isVideoLoading, setIsVideoLoading] = useState(false);
+  const [error, setError] = useState(null);
   const { translations } = useLanguage();
   const { colors } = useTheme();
 
-  // Create the video player instance
   const player = useVideoPlayer();
+  const timeoutRef = useRef(null);
 
   useEffect(() => {
     const fetchVideo = async () => {
       try {
         const videoData = await getVideo(id);
-        setVideo(videoData);
+        if (videoData?.videoUrl) {
+          setVideo(videoData);
+        } else {
+          setError(translations.errorVideoNotFound || 'Video not found');
+        }
       } catch (error) {
         console.error('Error fetching video:', error);
-        setVideo(null);
+        setError(translations.errorVideoNotFound || 'Video not found');
       } finally {
         setLoading(false);
       }
     };
     fetchVideo();
+
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
   }, [id]);
 
   useEffect(() => {
-    // Correctly load the video source into the player instance
     if (video?.videoUrl) {
+      setIsVideoLoading(true);
+      // Reset player to avoid stale state
+      player.replace(null);
       player.replace({ uri: video.videoUrl });
+
+      // Set timeout to prevent infinite loading
+      timeoutRef.current = setTimeout(() => {
+        if (isVideoLoading) {
+          setIsVideoLoading(false);
+          setError(
+            translations.errorVideoLoadTimeout ||
+              'Video failed to load. Please try again.'
+          );
+        }
+      }, 30000); // 30-second timeout
     }
+
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
   }, [video, player]);
 
   const handleCopyLink = async () => {
@@ -118,23 +151,22 @@ export default function AnimationDetailScreen() {
     return <SkeletonVideo />;
   }
 
-  if (!video) {
+  if (!video || error) {
     return (
       <SafeAreaView
         style={[styles.container, { backgroundColor: colors.background }]}
       >
         <Text style={[styles.error, { color: colors.error }]}>
-          {translations.errorVideoNotFound || 'Video not found'}
+          {error || translations.errorVideoNotFound || 'Video not found'}
         </Text>
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView
+    <SafeAreaWrapper
       style={[styles.container, { backgroundColor: colors.background }]}
     >
-      {/* Header */}
       <View style={[styles.header, { backgroundColor: colors.card }]}>
         <TouchableOpacity
           style={styles.backButton}
@@ -145,18 +177,37 @@ export default function AnimationDetailScreen() {
         <LanguageSwitcher />
       </View>
 
-      {/* Video Player - with native controls */}
       <View style={styles.videoContainer}>
         <VideoView
           style={styles.videoPlayer}
           player={player}
-          // THIS IS THE KEY CHANGE
           nativeControls={true}
           contentFit="contain"
+          onLoadStart={() => setIsVideoLoading(true)}
+          onLoad={() => {
+            setIsVideoLoading(false);
+            if (timeoutRef.current) {
+              clearTimeout(timeoutRef.current);
+            }
+          }}
+          onError={(err) => {
+            setIsVideoLoading(false);
+            setError(
+              translations.errorVideoLoadFailed || 'Failed to load video.'
+            );
+            console.error('Video player error:', err);
+            if (timeoutRef.current) {
+              clearTimeout(timeoutRef.current);
+            }
+          }}
         />
+        {isVideoLoading && (
+          <View style={styles.videoOverlay}>
+            <ActivityIndicator size="large" color={colors.primary} />
+          </View>
+        )}
       </View>
 
-      {/* Video Info */}
       <View style={[styles.videoInfo, { backgroundColor: colors.card }]}>
         <Text style={[styles.title, { color: colors.text }]}>
           {video.title || translations.noTitle}
@@ -173,7 +224,6 @@ export default function AnimationDetailScreen() {
         </View>
       </View>
 
-      {/* Controls */}
       <View style={[styles.controls, { backgroundColor: colors.card }]}>
         <TouchableOpacity style={styles.controlButton} onPress={handleShare}>
           <Share2 size={24} color={colors.primary} />
@@ -182,7 +232,7 @@ export default function AnimationDetailScreen() {
           </Text>
         </TouchableOpacity>
       </View>
-    </SafeAreaView>
+    </SafeAreaWrapper>
   );
 }
 
@@ -220,11 +270,7 @@ const styles = StyleSheet.create({
     bottom: 0,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  playButton: {
-    backgroundColor: 'rgba(30, 58, 138, 0.8)',
-    borderRadius: 50,
-    padding: 20,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   videoInfo: {
     padding: 20,

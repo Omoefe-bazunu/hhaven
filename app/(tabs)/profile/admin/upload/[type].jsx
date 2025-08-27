@@ -27,7 +27,6 @@ export default function UploadScreen() {
   const [formData, setFormData] = useState({});
   const [isUploading, setIsUploading] = useState(false);
 
-  // Restrict access to admin users
   if (!isAdmin) {
     Alert.alert('Access Denied', 'Only admins can upload content.');
     router.back();
@@ -46,25 +45,21 @@ export default function UploadScreen() {
     if (language) {
       setFormData((prev) => ({
         ...prev,
-        [language]: {
-          ...prev[language],
-          [field]: value,
-        },
+        [language]: { ...prev[language], [field]: value },
       }));
     } else {
       setFormData((prev) => ({ ...prev, [field]: value }));
     }
   };
 
-  // Pick and upload file to Firebase
   const handleFilePick = async (
     field,
     maxSizeMB = 100,
-    allowedTypes = ['*/*']
+    allowedExtensions = []
   ) => {
     try {
       const result = await DocumentPicker.getDocumentAsync({
-        type: allowedTypes,
+        type: allowedExtensions.length ? allowedExtensions : ['*/*'],
       });
       if (result.canceled) return;
 
@@ -74,101 +69,109 @@ export default function UploadScreen() {
         return;
       }
 
+      if (!user) {
+        Alert.alert('Error', 'You must be logged in to upload files.');
+        return;
+      }
+
       const response = await fetch(file.uri);
       const blob = await response.blob();
 
-      const storageRef = ref(storage, `${type}/${Date.now()}_${file.name}`);
-      await uploadBytes(storageRef, blob);
+      const folder = field === 'thumbnailUrl' ? 'thumbnails' : `${type}s`;
+      const fileExtension = file.name.split('.').pop().toLowerCase();
+      const storageRef = ref(storage, `${folder}/${Date.now()}_${file.name}`);
+
+      const metadata = {
+        contentType: getContentTypeFromExtension(fileExtension),
+      };
+
+      await uploadBytes(storageRef, blob, metadata);
       const downloadURL = await getDownloadURL(storageRef);
 
       updateFormData(field, downloadURL);
     } catch (err) {
       console.error('File upload error:', err);
-      Alert.alert('Error', 'File upload failed.');
+      if (err.code === 'storage/unauthorized') {
+        Alert.alert('Error', 'You do not have permission to upload files.');
+      } else if (err.code === 'storage/quota-exceeded') {
+        Alert.alert('Error', 'Storage quota exceeded. Contact support.');
+      } else {
+        Alert.alert('Error', 'Failed to upload file. Please try again.');
+      }
     }
+  };
+
+  const getContentTypeFromExtension = (extension) => {
+    const typeMap = {
+      mp3: 'audio/mpeg',
+      wav: 'audio/wav',
+      m4a: 'audio/mp4',
+      mp4: 'video/mp4',
+      mov: 'video/quicktime',
+      avi: 'video/x-msvideo',
+      jpg: 'image/jpeg',
+      jpeg: 'image/jpeg',
+      png: 'image/png',
+      gif: 'image/gif',
+    };
+    return typeMap[extension] || 'application/octet-stream';
   };
 
   const handleSubmit = async () => {
     setIsUploading(true);
     try {
+      const payload = {
+        createdAt: serverTimestamp(),
+        uploadedBy: user.email,
+      };
+
       if (type === 'notice') {
         if (!formData.title || !formData.message) {
-          Alert.alert('Error', 'Please provide title and message.');
-          setIsUploading(false);
-          return;
+          throw new Error('Title and message are required.');
         }
-        await addDoc(collection(db, 'notices'), {
-          title: formData.title,
-          message: formData.message,
-          createdAt: serverTimestamp(),
-          uploadedBy: user.email,
-        });
+        payload.title = formData.title;
+        payload.message = formData.message;
+        await addDoc(collection(db, 'notices'), payload);
       } else if (type === 'video') {
         if (!formData.videoUrl) {
-          Alert.alert('Error', 'Please upload a video file.');
-          setIsUploading(false);
-          return;
+          throw new Error('Video file is required.');
         }
-        const videoPayload = {
-          title: formData.title,
-          videoUrl: formData.videoUrl,
-          languageCategory: formData.languageCategory || '',
-          thumbnailUrl: formData.thumbnailUrl || '',
-          createdAt: serverTimestamp(),
-          uploadedBy: user.email,
-        };
-        await addDoc(collection(db, 'videos'), videoPayload);
+        payload.title = formData.title || '';
+        payload.videoUrl = formData.videoUrl;
+        payload.languageCategory = formData.languageCategory || '';
+        payload.thumbnailUrl = formData.thumbnailUrl || '';
+        await addDoc(collection(db, 'videos'), payload);
       } else if (type === 'sermon') {
-        // Fixed: Only require title, audio is optional
         if (!formData.title) {
-          Alert.alert('Error', 'Please provide a title for the sermon.');
-          setIsUploading(false);
-          return;
+          throw new Error('Title is required.');
         }
-        const sermonPayload = {
-          title: formData.title,
-          content: formData.content || '',
-          createdAt: serverTimestamp(),
-          uploadedBy: user.email,
-        };
-        // Only include audioUrl if it exists
-        if (formData.audioUrl) {
-          sermonPayload.audioUrl = formData.audioUrl;
-        }
-        await addDoc(collection(db, 'sermons'), sermonPayload);
+        payload.title = formData.title;
+        payload.content = formData.content || '';
+        if (formData.audioUrl) payload.audioUrl = formData.audioUrl;
+        await addDoc(collection(db, 'sermons'), payload);
       } else if (type === 'song') {
-        if (!formData.audioUrl || !formData.title) {
-          Alert.alert('Error', 'Please provide title and audio file.');
-          setIsUploading(false);
-          return;
+        if (!formData.title || !formData.audioUrl) {
+          throw new Error('Title and audio file are required.');
         }
-        const songPayload = {
-          title: formData.title,
-          audioUrl: formData.audioUrl,
-          category: formData.category,
-          createdAt: serverTimestamp(),
-          uploadedBy: user.email,
-        };
-        await addDoc(collection(db, 'songs'), songPayload);
+        payload.title = formData.title;
+        payload.audioUrl = formData.audioUrl;
+        payload.category = formData.category || '';
+        await addDoc(collection(db, 'songs'), payload);
       } else if (type === 'hymn') {
         if (!formData.en?.title) {
-          Alert.alert('Error', 'Please provide title for at least English.');
-          setIsUploading(false);
-          return;
+          throw new Error('Title for English is required.');
         }
-        const hymnPayload = {
-          ...formData,
-          createdAt: serverTimestamp(),
-          uploadedBy: user.email,
-        };
-        await addDoc(collection(db, 'hymns'), hymnPayload);
+        await addDoc(collection(db, 'hymns'), { ...formData, ...payload });
       }
 
       Alert.alert('Success', `${type} uploaded successfully!`);
       router.back();
     } catch (err) {
       console.error('Upload failed:', err);
-      Alert.alert('Error', 'Failed to upload. Please try again.');
+      Alert.alert(
+        'Error',
+        err.message || 'Failed to upload. Please try again.'
+      );
     } finally {
       setIsUploading(false);
     }
@@ -234,7 +237,13 @@ export default function UploadScreen() {
           <View style={styles.fileUpload}>
             <TouchableOpacity
               style={styles.uploadButton}
-              onPress={() => handleFilePick('audioUrl', 50, ['audio/*'])}
+              onPress={() =>
+                handleFilePick('audioUrl', 50, [
+                  'audio/mpeg',
+                  'audio/wav',
+                  'audio/mp4',
+                ])
+              }
             >
               <Upload size={20} color="#1E3A8A" />
               <Text style={styles.uploadText}>Upload Audio File</Text>
@@ -275,7 +284,13 @@ export default function UploadScreen() {
           <View style={styles.fileUpload}>
             <TouchableOpacity
               style={styles.uploadButton}
-              onPress={() => handleFilePick('thumbnailUrl', 5, ['image/*'])}
+              onPress={() =>
+                handleFilePick('thumbnailUrl', 5, [
+                  'image/jpeg',
+                  'image/png',
+                  'image/gif',
+                ])
+              }
             >
               <Upload size={20} color="#1E3A8A" />
               <Text style={styles.uploadText}>Upload Thumbnail</Text>
@@ -287,7 +302,13 @@ export default function UploadScreen() {
           <View style={styles.fileUpload}>
             <TouchableOpacity
               style={styles.uploadButton}
-              onPress={() => handleFilePick('videoUrl', 100, ['video/*'])}
+              onPress={() =>
+                handleFilePick('videoUrl', 100, [
+                  'video/mp4',
+                  'video/quicktime',
+                  'video/x-msvideo',
+                ])
+              }
             >
               <Upload size={20} color="#1E3A8A" />
               <Text style={styles.uploadText}>Upload Video (Max 10 mins)</Text>
@@ -322,7 +343,13 @@ export default function UploadScreen() {
           <View style={styles.fileUpload}>
             <TouchableOpacity
               style={styles.uploadButton}
-              onPress={() => handleFilePick('audioUrl', 50, ['audio/*'])}
+              onPress={() =>
+                handleFilePick('audioUrl', 50, [
+                  'audio/mpeg',
+                  'audio/wav',
+                  'audio/mp4',
+                ])
+              }
             >
               <Upload size={20} color="#1E3A8A" />
               <Text style={styles.uploadText}>

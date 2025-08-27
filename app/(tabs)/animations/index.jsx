@@ -17,6 +17,8 @@ import { useTheme } from '../../../contexts/ThemeContext';
 import { getVideos, searchContent } from '../../../services/dataService';
 import { LinearGradient } from 'expo-linear-gradient';
 import debounce from 'lodash.debounce';
+import { TopNavigation } from '../../../components/TopNavigation';
+import { SafeAreaWrapper } from '../../../components/ui/SafeAreaWrapper';
 
 const SkeletonCard = () => {
   const { colors } = useTheme();
@@ -139,17 +141,11 @@ export default function AnimationsScreen() {
   );
 
   return (
-    <SafeAreaView
-      style={[styles.container, { backgroundColor: colors.background }]}
-    >
-      <View style={[styles.header, { backgroundColor: colors.card }]}>
-        <Text style={[styles.title, { color: colors.text }]}>
-          {translations.animations}
-        </Text>
-        <LanguageSwitcher />
-      </View>
-
-      <View style={[styles.searchContainer, { backgroundColor: colors.card }]}>
+    <SafeAreaWrapper>
+      <TopNavigation title={translations.animations} />
+      <View
+        style={[styles.searchContainer, { backgroundColor: colors.surface }]}
+      >
         <Search
           size={20}
           color={colors.textSecondary}
@@ -160,10 +156,7 @@ export default function AnimationsScreen() {
           value={searchQuery}
           onChangeText={setSearchQuery}
           placeholderTextColor={colors.textSecondary}
-          style={[
-            styles.searchInput,
-            { color: colors.text, backgroundColor: colors.background },
-          ]}
+          style={[styles.searchInput, { color: colors.text }]}
         />
       </View>
 
@@ -178,36 +171,23 @@ export default function AnimationsScreen() {
         ListHeaderComponent={<View style={styles.headerSpacer} />}
         ListEmptyComponent={renderSkeletonCards}
       />
-    </SafeAreaView>
+    </SafeAreaWrapper>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-  },
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 20,
-    paddingVertical: 16,
+    paddingVertical: 10,
+    borderRadius: 8,
+    marginHorizontal: 20,
+    marginBottom: 10,
   },
   searchIcon: {
     position: 'absolute',
-    left: 36,
+    left: 30,
     zIndex: 1,
   },
   searchInput: {
@@ -216,7 +196,6 @@ const styles = StyleSheet.create({
     paddingLeft: 40,
     paddingVertical: 8,
     height: 40,
-    borderRadius: 8,
     marginBottom: 0,
   },
   listContainer: {

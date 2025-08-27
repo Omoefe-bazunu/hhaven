@@ -6,14 +6,13 @@ import {
   SafeAreaView,
   TouchableOpacity,
   ScrollView,
+  Alert, // 👈 Added Alert for user feedback
 } from 'react-native';
 import { router } from 'expo-router';
 import {
-  ArrowLeft,
-  Upload,
   MessageCircle,
-  ChartBar as BarChart3,
-  Settings,
+  MessageCircleQuestion,
+  Brain,
   Music,
   Video,
   Bell,
@@ -22,9 +21,25 @@ import {
 import { useAuth } from '../../../../contexts/AuthContext';
 import { LanguageSwitcher } from '../../../../components/LanguageSwitcher';
 import { TopNavigation } from '../../../../components/TopNavigation';
+import { SafeAreaWrapper } from '../../../../components/ui/SafeAreaWrapper';
+import AsyncStorage from '@react-native-async-storage/async-storage'; // 👈 Import AsyncStorage
 
 export default function AdminDashboardScreen() {
   const { user } = useAuth();
+
+  // 👈 Add this function to clear the onboarding state
+  const handleResetOnboarding = async () => {
+    try {
+      await AsyncStorage.removeItem('hasSeenOnboarding');
+      Alert.alert(
+        'Success',
+        'Onboarding state has been reset. Please restart the app to see it again.'
+      );
+    } catch (error) {
+      console.error('Failed to reset onboarding state:', error);
+      Alert.alert('Error', 'Failed to reset onboarding state.');
+    }
+  };
 
   const adminActions = [
     {
@@ -63,16 +78,31 @@ export default function AdminDashboardScreen() {
       onPress: () => router.push('/(tabs)/profile/admin/messages'),
     },
     {
-      id: 'analytics',
-      title: 'Analytics',
-      description: 'View app usage statistics',
-      icon: <BarChart3 size={32} color="#DC2626" />,
-      onPress: () => {},
+      id: 'quiz-resource',
+      title: 'Quiz Resource',
+      description: 'Upload Quiz Resources',
+      icon: <Brain size={32} color="#DC2626" />,
+      onPress: () => router.push('/(tabs)/profile/admin/quizupload'),
+    },
+    {
+      id: 'quiz-help-questions',
+      title: 'Quiz Help Questions',
+      description: 'Manage Quiz Help Questions',
+      icon: <MessageCircleQuestion size={32} color="#DC2626" />,
+      onPress: () => router.push('/(tabs)/profile/admin/quizhelpquestions'),
+    },
+    // 👈 Add the new action here
+    {
+      id: 'reset-onboarding',
+      title: 'Reset Onboarding',
+      description: 'Clear onboarding state for testing',
+      icon: <Bell size={32} color="#EF4444" />,
+      onPress: handleResetOnboarding,
     },
   ];
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaWrapper>
       <TopNavigation />
       <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
         <View style={styles.welcomeCard}>
@@ -96,48 +126,12 @@ export default function AdminDashboardScreen() {
             </TouchableOpacity>
           ))}
         </View>
-
-        <View style={styles.quickStats}>
-          <Text style={styles.statsTitle}>Quick Stats</Text>
-          <View style={styles.statsGrid}>
-            <View style={styles.statCard}>
-              <Text style={styles.statNumber}>24</Text>
-              <Text style={styles.statLabel}>Hymns</Text>
-            </View>
-            <View style={styles.statCard}>
-              <Text style={styles.statNumber}>18</Text>
-              <Text style={styles.statLabel}>Sermons</Text>
-            </View>
-            <View style={styles.statCard}>
-              <Text style={styles.statNumber}>156</Text>
-              <Text style={styles.statLabel}>Songs</Text>
-            </View>
-            <View style={styles.statCard}>
-              <Text style={styles.statNumber}>12</Text>
-              <Text style={styles.statLabel}>Videos</Text>
-            </View>
-          </View>
-        </View>
       </ScrollView>
-    </SafeAreaView>
+    </SafeAreaWrapper>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F8FAFC',
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    backgroundColor: '#FFFFFF',
-    borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
-  },
   backButton: {
     padding: 8,
   },

@@ -55,9 +55,6 @@ export default function RootLayout() {
               <Stack.Screen name="(onboarding)" />
               <Stack.Screen name="(auth)" />
               <Stack.Screen name="(tabs)" />
-              {/* <Stack.Screen name="contact" />
-              <Stack.Screen name="notices" />
-              <Stack.Screen name="about" /> */}
               <Stack.Screen name="+not-found" />
             </Stack>
             <StatusBar style="auto" />

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -14,7 +14,7 @@ import { useLanguage } from '../../../contexts/LanguageContext';
 import { useTheme } from '../../../contexts/ThemeContext';
 import { SafeAreaWrapper } from '../../../components/ui/SafeAreaWrapper';
 import { TopNavigation } from '../../../components/TopNavigation';
-import { mockSongs, mockHymns } from '../../../data/mockData';
+import { getSongs, getHymns } from '../../../services/dataService';
 import { AudioPlayer } from '../../../components/AudioPlayer';
 import { Book, Music } from 'lucide-react-native';
 
@@ -39,13 +39,38 @@ const CATEGORIES = [
 // Defines the Songs screen with Hymns and Music tabs
 export default function SongsScreen() {
   const [searchQuery, setSearchQuery] = useState('');
+  const [hymns, setHymns] = useState([]);
+  const [songs, setSongs] = useState([]);
+  const [loading, setLoading] = useState(true);
   const { translations, currentLanguage } = useLanguage();
   const { colors } = useTheme();
+
+  // Fetch hymns and songs from dataService
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const [fetchedHymns, fetchedSongs] = await Promise.all([
+          getHymns ? getHymns() : Promise.resolve([]), // Fallback to empty array if getHymns is not defined
+          getSongs(),
+        ]);
+        setHymns(fetchedHymns || []);
+        setSongs(fetchedSongs || []);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+        setHymns([]);
+        setSongs([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
 
   const safeSearchQuery = (searchQuery || '').toString();
 
   // Filter hymns
-  const filteredHymns = mockHymns.filter((hymn) => {
+  const filteredHymns = (hymns || []).filter((hymn) => {
     const content =
       (hymn.translations && hymn.translations[currentLanguage]) ||
       hymn.translations?.en ||
@@ -59,7 +84,7 @@ export default function SongsScreen() {
   });
 
   // Filter non-hymn songs
-  const filteredSongs = mockSongs.filter((song) => {
+  const filteredSongs = (songs || []).filter((song) => {
     const title = song.title || '';
     const style = song.style || '';
     return (

@@ -1,12 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  Modal,
-  Alert,
-} from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Modal } from 'react-native';
 import { router } from 'expo-router';
 import {
   Info,
@@ -15,6 +8,8 @@ import {
   Settings,
   Moon,
   Sun,
+  Brain,
+  ArrowLeft,
 } from 'lucide-react-native';
 import { useTheme } from '../contexts/ThemeContext';
 import { useAuth } from '../contexts/AuthContext';
@@ -22,9 +17,9 @@ import { LanguageSwitcher } from './LanguageSwitcher';
 import {
   subscribeToNotices,
   subscribeToReadNotices,
-} from '../services/dataService'; // Import new functions
+} from '../services/dataService';
 
-export function TopNavigation({ title, showBackButton = false }) {
+export function TopNavigation({ title, showBackButton = false, onPress }) {
   const { colors, isDark, toggleTheme } = useTheme();
   const { isAdmin, user } = useAuth();
   const [showMenu, setShowMenu] = useState(false);
@@ -34,12 +29,10 @@ export function TopNavigation({ title, showBackButton = false }) {
 
   // Subscribe to real-time notices and read notices
   useEffect(() => {
-    // Subscribe to all notices
     const unsubscribeNotices = subscribeToNotices((newNotices) => {
       setNotices(newNotices);
     });
 
-    // Subscribe to the user's read notices
     const userId = user?.uid;
     const unsubscribeReadNotices = subscribeToReadNotices(
       userId,
@@ -48,14 +41,13 @@ export function TopNavigation({ title, showBackButton = false }) {
       }
     );
 
-    // Cleanup subscriptions on unmount
     return () => {
       unsubscribeNotices();
       unsubscribeReadNotices();
     };
   }, [user]);
 
-  // Calculate unread count whenever notices or read notices change
+  // Calculate unread count
   useEffect(() => {
     const readSet = new Set(readNoticeIds);
     const count = notices.filter((notice) => !readSet.has(notice.id)).length;
@@ -104,10 +96,12 @@ export function TopNavigation({ title, showBackButton = false }) {
     });
   }
 
-  // Handle tap on the notifications bell
   const handleNotifications = () => {
-    // Navigate to a new screen to view notices instead of an alert
     router.push('/profile/notices');
+  };
+
+  const handleQuizPress = () => {
+    router.push('/profile/quizresources');
   };
 
   return (
@@ -119,12 +113,19 @@ export function TopNavigation({ title, showBackButton = false }) {
         ]}
       >
         <View style={styles.leftSection}>
+          {showBackButton && (
+            <TouchableOpacity style={styles.backButton} onPress={onPress}>
+              <ArrowLeft size={24} color={colors.text} />
+            </TouchableOpacity>
+          )}
           <Text style={[styles.title, { color: colors.text }]}>{title}</Text>
         </View>
 
         <View style={styles.rightSection}>
           <LanguageSwitcher />
-
+          <TouchableOpacity style={styles.iconButton} onPress={handleQuizPress}>
+            <Brain size={20} color={colors.text} />
+          </TouchableOpacity>
           <TouchableOpacity
             style={styles.iconButton}
             onPress={handleNotifications}
@@ -138,7 +139,6 @@ export function TopNavigation({ title, showBackButton = false }) {
               </View>
             )}
           </TouchableOpacity>
-
           <TouchableOpacity
             style={styles.iconButton}
             onPress={() => setShowMenu(true)}
@@ -194,6 +194,11 @@ const styles = StyleSheet.create({
   },
   leftSection: {
     flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  backButton: {
+    marginRight: 12,
   },
   title: {
     fontSize: 24,

@@ -16,7 +16,7 @@ const { width } = Dimensions.get('window');
 const slides = [
   {
     id: '1',
-    title: 'Welcome to Haven',
+    title: 'Welcome to Grace',
     description:
       'Your spiritual journey begins here with multilingual worship and biblical content designed to bring you closer to God.',
     icon: <Heart size={80} color="#FFFFFF" />,
@@ -26,7 +26,7 @@ const slides = [
     id: '2',
     title: 'Rich Content',
     description:
-      'Access thousands of hymns, inspiring sermons, gospel music, and animated Bible stories in your preferred language.',
+      'Access spiritually edifying hymns, inspiring sermons, gospel music, and animated Bible stories.',
     icon: <BookOpen size={80} color="#FFFFFF" />,
     backgroundColor: '#7C3AED',
   },
@@ -34,7 +34,7 @@ const slides = [
     id: '3',
     title: 'Beautiful Music',
     description:
-      'Enjoy our collection of instrumentals, a cappella performances, and contemporary gospel songs from around the world.',
+      'Enjoy our collection of instrumentals and a cappella performances.',
     icon: <Music size={80} color="#FFFFFF" />,
     backgroundColor: '#DC2626',
   },
@@ -42,7 +42,7 @@ const slides = [
     id: '4',
     title: 'Multiple Languages',
     description:
-      'Experience worship in English, Yoruba, Igbo, French, Chinese, Swahili, and 4 other languages.',
+      'Experience worship in English, Yoruba, Igbo, Urhobo, Hausa, French, Chinese, Swahili, and other supported languages.',
     icon: <Palette size={80} color="#FFFFFF" />,
     backgroundColor: '#059669',
   },

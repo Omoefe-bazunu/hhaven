@@ -61,7 +61,6 @@ export default function ContactScreen() {
     <SafeAreaView>
       <TopNavigation
         title={translations.contact}
-        showBackButton={true}
         onPress={() => router.back()}
       />
 

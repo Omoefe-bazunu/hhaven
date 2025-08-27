@@ -22,10 +22,21 @@ import { AudioPlayer } from '../../../../components/AudioPlayer';
 // Import language-specific data
 const hymnData = {
   en: require('../../../../assets/data/hymns_en.json'),
+  fr: require('../../../../assets/data/hymns_fr.json'),
 };
 
 const psalmData = {
   en: require('../../../../assets/data/psalms_en.json'),
+  fr: require('../../../../assets/data/psalms_fr.json'),
+  yo: require('../../../../assets/data/psalms_yo.json'),
+  zh: require('../../../../assets/data/psalms_zh.json'),
+  tw: require('../../../../assets/data/psalms_tw.json'),
+  zu: require('../../../../assets/data/psalms_zu.json'),
+  sw: require('../../../../assets/data/psalms_sw.json'),
+  ig: require('../../../../assets/data/psalms_ig.json'),
+  sw: require('../../../../assets/data/psalms_sw.json'),
+  ha: require('../../../../assets/data/psalms_ha.json'),
+  ur: require('../../../../assets/data/psalms_ur.json'),
 };
 
 // Separate caches

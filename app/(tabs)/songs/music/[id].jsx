@@ -21,6 +21,7 @@ import { SafeAreaWrapper } from '../../../../components/ui/SafeAreaWrapper';
 import { getSong } from '../../../../services/dataService';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Audio } from 'expo-av';
+import { LanguageSwitcher } from '../../../../components/LanguageSwitcher';
 
 const SkeletonSong = () => {
   const { colors } = useTheme();
@@ -194,25 +195,15 @@ export default function MusicDetailScreen() {
 
   return (
     <SafeAreaWrapper>
-      <View
-        style={[
-          styles.header,
-          { backgroundColor: colors.surface, borderBottomColor: colors.border },
-        ]}
-      >
+      {/* Header */}
+      <View style={[styles.header, { backgroundColor: colors.card }]}>
         <TouchableOpacity
           style={styles.backButton}
           onPress={() => router.back()}
         >
           <ArrowLeft size={24} color={colors.text} />
         </TouchableOpacity>
-        <Text
-          style={[styles.headerTitle, { color: colors.text }]}
-          numberOfLines={1}
-        >
-          {song.title || translations.noTitle}
-        </Text>
-        <View style={{ width: 40 }} />
+        <LanguageSwitcher />
       </View>
       <ScrollView
         style={[styles.content, { backgroundColor: colors.background }]}
@@ -297,6 +288,9 @@ export default function MusicDetailScreen() {
 }
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+  },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -304,6 +298,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 16,
     borderBottomWidth: 1,
+    borderBottomColor: '#E5E7EB',
   },
   backButton: {
     padding: 8,
